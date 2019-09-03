@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html>
+<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+<head>
+<h1>Antaine Ó Conghaile - G00347577</h1>
+    <meta charset="UTF-8">
+    <title>Canvas</title>
+
+    <style type="text/css">
+        canvas {
+            border: 1px solid grey;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas-for-ball" height="600" width="800"></canvas>
+	<button onclick="myFunction()">Enter Number of Balls</button>
+    <script type="text/javascript">
+	
+	//Prompt User To Enter Number of Balls
+	function addBallNum()
+	{
+	 var num = prompt("Please Enter Number of Balls");
+	 if(num == null)
+	 {
+	  num = 2;
+	 }
+	 return num;
+	}
+	
+	  // Gets a handle to the element with id canvasOne.
+      var canvas = document.getElementById("canvas-for-ball");
+      // Get a 2D context for the canvas.
+      var ctx = canvas.getContext("2d");
+
+	  class ball{
+		constructor(x,y,a,r,s,m,R,G,B,i)
+		{
+			this.xPos = x;						//Ball Postion on Canvas X-axis
+			this.yPos = y;						//Ball Postion on Canvas Y-axis
+			this.xVelocity = 0;
+			this.yVelocity = 0;
+			this.radius = r;					//Ball Radius
+			this.yAccel = a;					//Ball Vertical Acceleration
+			this.xAccel = a;					//Ball Horizontal Acceleration
+			this.sections = s;					//Number of Sections on ball
+			this.degrees = [];					//Array to Store Degree Values
+			this.degree = 0;					//Variable to Store the Angle of Every Section 
+			this.rad =[]						//Variable to Store Radian Values
+			this.rotateSpeed = 5;				//Rate of Lines Moving to Simulate Spin
+			this.count = 0;						//Counter to Keep Track of which direction Ball is Rotating
+			this.i = 0;							//Free Variable;
+			this.mass = m;						//Ball Mass
+			this.R = R;							//R(GB) Value;
+			this.G = G;							//R(G)B) Value;
+			this.B = B;							//RG(B) Value;
+		}
+		
+		//Draws the Ball
+		draw()	
+		{
+		//Start Path
+				ctx.beginPath();
+		//Shifts Degrees by rotateSpeed
+				this.rotate();
+		//Converts to Radian 
+				this.convertToRad();
+		//Draws the Circle
+				ctx.arc(this.xPos, this.yPos,this.radius, 0, 2 * Math.PI,false);
+		//Decides Colour of Ball and Colours in the Ball
+				ctx.fillStyle = "rgb(" + this.R + "," + this.G + "," + this.B + ")"	;
+				ctx.fill();
+		//Resets line to the centre of the Ball
+				
+		//Runs based on Sections to Creae BeachBall
+				for(this.i = 0; this.i < this.sections; this.i += 1)
+				{
+				 //Resets Starting Point of line to the Centre of the Ball
+					ctx.moveTo(this.xPos, this.yPos);
+				 //Draws a line to Divide the Ball
+					ctx.lineTo(this.xPos + this.radius * Math.cos(this.rad[this.i]), this.yPos + this.radius * Math.sin(this.rad[this.i]));
+				}//End of for
+				
+		//Ends Path
+				ctx.closePath();
+		//Draws
+				ctx.stroke();
+		}//End of draw
+		//Gives Ball Acceleration
+		move()
+		{
+		 //Updates X and Y Positions Based on Acceleration
+			this.yPos += this.yAccel;
+			this.xPos += this.xAccel;
+		}//End of move
+
+		//Calculates Angles
+		calculateAngles()
+		{
+		//Calculates the Angle
+			this.degree = 360/this.sections;
+			this.degrees[0] = this.degree;
+		//Runs based on Number of Sections Required
+			for(this.i = 1; this.i < this.sections; this.i += 1)
+			{
+				//Calculates and Adds the Degree to the Degrees Array
+				this.degrees[this.i] = this.degrees[this.i-1] + this.degree;
+			}//End of for
+		}//End of calculateAngles
+		
+		//Converts Degrees to Radian and adds them to the rad Array
+		convertToRad()
+		{
+			for(this.i = 0; this.i < this.sections; this.i += 1)
+			{
+				this.rad[this.i] = this.degrees[this.i] * (Math.PI / 180);
+			}//End of for
+		}//End of convertToRad
+		//Increments degrees by rotateSpeed to create Spin
+		rotate()
+		{
+			for(this.i = 0; this.i < this.sections; this.i += 1)
+			{
+				this.degrees[this.i] += this.rotateSpeed;
+			}//End of for
+		}//End of rotate
+
+		//Changes the Ball size by manipulating the radius
+		resize()
+		{
+		//Doubles the Ball 
+			if(balls[0].count %2 == 0)
+			{
+				this.radius = this.radius * 2;
+			}
+		//Halves the Ball
+			else
+			{
+				this.radius = this.radius/2;
+			}
+			//Keeps track if Ball was last Doubled or Halved
+			this.count++;
+		}//End of resize
+		
+		//Slows X&Y Acceleration 
+		slow()
+		{
+			this.xAccel *=0.9;
+			this.yAccel *=0.9;
+		}//End of slow
+		
+		//Slows X Acceleration
+		slowX()
+		{
+			this.xAccel *=0.9;
+		}//End of slowX
+		
+		//Slows Y Acceleration
+		slowY()
+		{
+			this.yAccel *=0.9;
+		}//End of slowY
+		
+		//Accelerates X&Y
+		accel()
+		{
+			this.xAccel *=1.2;
+			this.yAccel *=1.2;
+		}//End of accel
+		
+		//Accelerates X
+		xSpeed()
+		{
+			this.xAccel *=1.2;
+		}//End of xSpeed
+		
+		//Accelerates Y
+		ySpeed()
+		{
+			this.yAccel *=1.2;
+		}//End of ySpeed
+		
+		//Checks if Ball has Touched or Passed the Canvas Border
+		collisionDetect()
+		{
+			 
+		//Checks if Ball Y Postion is Greater or Equal to Y Border 
+			 if(this.yPos >= (canvas.height - this.radius ) || this.yPos <= (0 + this.radius ))
+			{
+				//Reverses Ball and Rotate Direction
+				this.yAccel = this.yAccel * -1;
+				this.rotateSpeed = this.rotateSpeed *-1;
+				this.rotateSpeed = this.rotateSpeed * 0.9;
+				//Loss of Momentum on Collision
+				this.xAccel = this.xAccel * 0.9;
+				this.yAccel = this.yAccel * 0.9;
+
+				//Stops Ball being Caught Constantly Reversing Direction from being Trapped in the Border	
+				if(this.yPos > (canvas.height - this.radius ))
+				{
+					//Moves Y Postion on the Border if it has Crossed the Border
+					this.yPos = (canvas.height - this.radius)
+				}//End of if
+				
+				else if(this.yPos <= (0 + this.radius ))
+				{
+					//Moves Y Postion on the Border if it has Crossed the Border
+					this.yPos = (0 + this.radius)
+				}//End of else if
+				console.log("Wall Detected");
+			}//End of Y if
+
+			//Checks if Ball X Postion is Greater or Equal to X Border 
+			if(this.xPos >= (canvas.width - this.radius ) || this.xPos <= (0 + this.radius ))
+			{
+				//Reverses Ball and Rotate Direction
+				this.xAccel = this.xAccel * -1;
+				this.rotateSpeed = this.rotateSpeed *-1;
+				//Loss of Momentum on Collision
+				this.rotateSpeed = this.rotateSpeed * 0.9;
+				this.xAccel = this.xAccel * 0.9;
+				this.yAccel = this.yAccel * 0.9;
+				
+				//Stops Ball being Caught Constantly Reversing Direction from being Trapped in the Border	
+				if(this.xPos > (canvas.width - this.radius ))
+				{
+					//Moves X Postion on the Border if it has Crossed the Border
+					this.xPos = (canvas.width - this.radius);
+				}//End of if
+				
+				else if(this.xPos <= (0 + this.radius ))
+				{
+					//Moves X Postion on the Border if it has Crossed the Border
+						this.xPos = (0 + this.radius);
+				}//End of else if
+				console.log("Collision Detected");
+			}//End of if
+		}//End of collisionDetect
+		
+		//For Debugging. Outputs Variables to Console
+		info()
+		{
+		/*	console.log(this.degree);
+			console.log(this.degrees[0]);
+			console.log(this.degrees[1]);
+			console.log(this.degrees[2]);
+			console.log(this.degrees[3]);
+			console.log(this.degrees[4]);
+			console.log(this.degrees[5]);
+			console.log(this.degrees[6]);*/
+			
+			/*console.log(this.rad[0]);
+			console.log(this.rad[1]);
+			console.log(this.rad[2]);
+			console.log(this.rad[3]);
+			console.log(this.rad[4]);
+			console.log(this.rad[5]);
+			console.log(this.rad[6]);*/
+			
+			//console.log(this.xPos,this.yPos,this.radius);
+		}//End of Info
+		
+	  }//End of ball Class
+
+		//Calculate Line Distance & Collision Angle
+	  	function calculateLine(x1,y1,x2,y2)
+		{
+			var distance = 0;
+			var dX = (x1 - x2);
+			var dY = (y1 - y2);
+			distance = Math.pow((x2-x1),2) + Math.pow((y2-y1),2);
+			distance = Math.sqrt(distance);
+			var colAngle = Math.atan2(dY,dX);
+			return{
+			distance: distance,
+			colAngle: colAngle
+			}; 
+		}//End of calculateLine
+	  
+	  //Check if Balls Collide
+		function checkBall(line,diameter,i,j,numberOfBalls)
+		{
+			if(line <= diameter)
+			{
+				balls[i].a *= 0.9;
+				balls[j].a *= 0.9;
+				calculateMomentum(balls[i].xAccel,balls[i].mass,balls[j].yAccel,balls[j].mass,i,j);
+				console.log("Collision Detected");
+				changeColour(i,j);	
+			}//End of if
+			
+		
+		}//End of checkBall
+		
+		//Calculate Momentum after Collision
+		 function calculateMomentum(u1,m1,u2,m2,i,j)
+		 {
+			var v1 = (u1 *(m1-m2) + 2 *(m2 *u2))/(m1+m2);
+			var v2 = (u2*(m2-m1) + 2 *(m1 +u1))/(m1+m2);
+			
+			var magn1 = Math.sqrt(balls[i].xAccel * balls[i].xAccel + balls[i].yAccel * balls[i].yAccel);
+			var magn2 = Math.sqrt(balls[j].xAccel * balls[j].xAccel + balls[j].yAccel * balls[j].yAccel);
+			var v =[v1,v2];
+			var angle1 = Math.atan2(balls[i].yAccel,balls[i].xAccel);
+			var angle2 = Math.atan2(balls[j].yAccel,balls[j].xAccel);
+			var collAngle = calculateLine(balls[i].xPos,balls[i].yPos,balls[j].xPos,balls[j].yPos).colAngle;
+			var newXAccel1 = magn1 * Math.cos(angle1 - collAngle);
+			var newYAccel1 = magn1 * Math.sin(angle1 - collAngle);
+			
+			var newXAccel2 = magn2 * Math.cos(angle2 - collAngle);
+			var newYAccel2 = magn2 * Math.sin(angle2 - collAngle);
+			
+			var finalXAccel1 = ((balls[i].mass-balls[j].mass) *newXAccel1 + (balls[j].mass+balls[j].mass)* newXAccel2)/(balls[i].mass+balls[j].mass);
+			var finalXAccel2 = ((balls[i].mass+balls[i].mass) *newXAccel1 + (balls[j].mass-balls[i].mass)* newXAccel2)/(balls[i].mass+balls[j].mass);
+			
+			balls[i].xAccel = Math.cos(collAngle)*finalXAccel1 + Math.cos(collAngle + Math.PI/2) * newYAccel1;
+			balls[i].yAccel = Math.sin(collAngle)*finalXAccel1 + Math.sin(collAngle + Math.PI/2) * newYAccel1;
+			
+			balls[j].xAccel = Math.cos(collAngle)*finalXAccel2 + Math.cos(collAngle + Math.PI/2) * newYAccel2;
+			balls[j].yAccel = Math.sin(collAngle)*finalXAccel2 + Math.sin(collAngle + Math.PI/2) * newYAccel2;
+			
+			var line =calculateLine(balls[i].xPos,balls[i].yPos,balls[j].xPos,balls[j].yPos).distance;
+			var diameter = balls[i].radius + balls[j].radius;
+			var excessLength = 0;
+			
+			//Fixes Ball being Stuck between Balls
+			if(line < diameter)
+			{
+				excessLength = diameter - line;
+				balls[i].xPos += (excessLength)*Math.cos(collAngle);
+				balls[i].yPos += (excessLength)*Math.sin(collAngle);
+			}//End of if
+		 }
+
+	  //Create Balls
+		var balls = []; //Stores Ball Objects
+		var x=0;		//X Postion
+		var y=0;		//Y Postion
+		var a =0;		//Acceleration
+		var r =0;		//Radius
+		var s =1;		//Number of Sections
+		var mass =1;	//Mass
+		var R = 0;		//R(GB) Value;
+		var G = 0;		//R(G)B) Value;
+		var B = 0;		//RG(B) Value;
+		numberOfBalls = addBallNum();
+								
+		var i =0;
+		//Generate Random Balls
+		for(i=0;i<numberOfBalls;i++)
+		{
+			x = Math.floor((Math.random()*canvas.width));
+			y = Math.floor((Math.random()*canvas.height));
+			a = Math.floor((Math.random()*30));
+			r = Math.floor((Math.random()*50) + 1);
+			s = Math.floor((Math.random()*24));
+			m = Math.floor((Math.random()*100));
+			R = Math.floor((Math.random()*256));
+			G = Math.floor((Math.random()*256));
+			B = Math.floor((Math.random()*256));
+			balls[i] = new ball(x,y,a,r,s,m,R,G,B,i);
+		}
+		//Set Ball 1 & 2 to 7 Sided Beachballs
+		balls[0].sections = 7;
+		balls[1].sections = 7;
+		balls[0].radius = 25;
+		
+		//Changes Ball Colour
+	  	function changeColour(i,j)
+		{
+			//Ball i
+			balls[i].R = Math.floor((Math.random() * 256) + 1);
+			balls[i].G = Math.floor((Math.random() * 256) + 1);
+			balls[i].B = Math.floor((Math.random() * 256) + 1);
+			//Ball j
+			balls[j].R = Math.floor((Math.random() * 256) + 1);
+			balls[j].G = Math.floor((Math.random() * 256) + 1);
+			balls[j].B = Math.floor((Math.random() * 256) + 1);
+		}
+	
+	  //Set Gravity Rate
+	  var gravity = 0.1;
+
+	 //Calculate Angles Once
+	  for(i=0;i<numberOfBalls;i++)
+	  {
+		balls[i].calculateAngles();
+	  }
+			
+	  //Repeats the Animation with Updated Information
+	  function repeatme() {
+		var line;		 
+		var diameter;
+		var i = 0;
+		var j = 0;
+
+		//Clears canvas
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		//Draws Balls
+		 for(i=0;i<numberOfBalls;i++)
+		{
+			balls[i].draw();
+		}
+
+		//Check All Balls for Collisions
+		for(i = 0;i<numberOfBalls;i++)
+		{
+			for(j = (i +1);j<numberOfBalls;j++)
+			{
+				//Calculate Line
+				line =calculateLine(balls[i].xPos,balls[i].yPos,balls[j].xPos,balls[j].yPos).distance;
+				//Diameter
+				diameter = balls[i].radius + balls[j].radius;
+				//Check for Ball to Ball Collisions
+				checkBall(line,diameter,i,j,numberOfBalls)
+			}
+		}
+	
+		//Checks for Ball to Wall Collisions
+		 for(i=0;i<numberOfBalls;i++)
+		{
+			balls[i].collisionDetect();
+		}
+		
+		//Updates Ball Location
+		 for(i=0;i<numberOfBalls;i++)
+		{
+			balls[i].move();
+		}
+	
+		//Apply Gravity
+		 for(i=0;i<numberOfBalls;i++)
+		{
+			balls[i].yAccel += gravity;
+		}
+		//Repeats Indefinitely
+        window.requestAnimationFrame(repeatme);
+      }//End of repeatme
+	  
+	  //Calls repeatme to Start Animation
+	  repeatme();
+
+	  //Allows the User to Reposition the Ball based on Where the User Clicks
+	  canvas.addEventListener("click", function(event) {
+	  //Stores the Differnce between the Canvas and the Page
+		var top = canvas.offsetTop;
+		var left = canvas.offsetLeft;
+		//Changes Ball Postion to Mouse Position
+        balls[0].xPos = event.clientX-left;
+		balls[0].yPos = event.clientY-top;
+		});//End of Cick reposition function
+
+		$(document.body).on('keydown', function(e) {
+		//	console.log(e.which);
+			switch (e.which) {
+			//Left Arrow Key
+			case 37:
+				//Adds Acceleration Left
+				balls[0].xAccel +=  -1;
+				break;
+			//Right Arrow Key
+			case 39:
+				//Adds Acceleration Right
+				balls[0].xAccel += 1;
+				break;
+			//Up Arrow Key
+			case 38:
+				//Adds Acceleration Upward
+				balls[0].yAccel += -1;
+				break;
+			//Down Arrow Key
+			case 40:
+				//Adds Acceleration Downward
+				balls[0].yAccel += 1;
+				break;
+			//R
+			case 82:
+				//Adds Spin Acceleration
+				balls[0].rotateSpeed = balls[0].rotateSpeed *1.3;
+				break;
+			//T
+			case 84:
+			//Decelerates Spin
+				balls[0].rotateSpeed = balls[0].rotateSpeed * 0.7;
+				break;
+			//S
+			case 83:
+			//Resizes Ball
+				balls[0].resize();
+				break;
+			//Spacebar
+			case 32:
+				balls[0].slow();
+				break;
+			//C
+			case 67:
+				balls[0].slowX();
+				break;
+			//V
+			case 86:
+				balls[0].slowY();
+				break;
+			//Left Shift
+			case 16:
+				balls[0].accel();
+				break;
+			//Z
+			case 90:
+				balls[0].xSpeed();
+				break;
+			//X
+			case 88:
+				balls[0].ySpeed();
+				break;
+			}//End of switch
+      });//End of keydown function
+    </script>
+</body>
+</html>
